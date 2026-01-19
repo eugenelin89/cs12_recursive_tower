@@ -11,6 +11,7 @@ struct cellTower {
 const int GRID_SIZE = 10;
 const double FREQ_DISTANCE = 5.6;
 const double TOWER_DISTANCE = 2.1;
+
 //  The FREQ vector  may have more frequencies than needed
 const vector<char> FREQ {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'};
 
@@ -32,115 +33,99 @@ double distance(int x1, int y1, int x2, int y2) {
     return sqrt(a * a + b * b);
 }
 // Helper function to determine if a tower is needed
-// Returns true if distance of point is less than TOWER_DISTANCE
-bool towerNeeded(vector<vector<char> > grid, int testRow, int testCol) {
-    // Base case
-    return true;
-}
-
-// Helper function to find the next valid frequency
-// Returns the next frequency to use
-char validFreq(vector<vector<char> > grid, int testRow, int testCol, int numFreq) {
-    // Enter your code here
-    return '.';
-}
-
-bool validGrid(vector<vector<char> > &grid) {
+// Returns false if distance of point is less than TOWER_DISTANCE
+bool towerNeeded(vector<vector<char> > &grid, int testRow, int testCol) {
     for (int i = 0; i < GRID_SIZE; i++) {
         for (int j = 0; j < GRID_SIZE; j++) {
-            bool enforce_freq = false;
-            bool enforce_tower_distance = false;
-            bool valid_distance = false;
-            if (grid[i][j] != '.') {
-                enforce_freq = true;
+            if (grid[i][j] != '.' && distance(testRow, testCol, i, j) <= TOWER_DISTANCE) {
+                return false;
             }
-            else {
-                enforce_tower_distance = true;
-            }
-            for (int x = 0; x < GRID_SIZE; x++) {
-                for (int y = 0; y < GRID_SIZE; y++) {
-                    if (enforce_freq) {
-                        if (i==x && j==y) continue;
-                        if (distance(i, j, x, y) < FREQ_DISTANCE && grid[i][j] == grid[x][y]) {
-                            return false;
-                        }
-                    }
-                    else if (enforce_tower_distance) {
-                        if (grid[x][y] != '.' && distance(i, j, x, y) <= TOWER_DISTANCE) {
-                            valid_distance = true;
-                            break;
-                        }
-                    }
-                }
-                if (valid_distance) break;
-            }
-            
-            if (enforce_tower_distance && !valid_distance) return false;
         }
     }
+    
     return true;
 }
 
-bool checkDistanceRule(vector<vector<char> > &grid) {
-    for (int i = 0; i < GRID_SIZE; i++) {
-        for (int j = 0; j < GRID_SIZE; j++) {
-            bool valid_distance = false;
-            for (int x = 0; x < GRID_SIZE; x++) {
-                for (int y = 0; y < GRID_SIZE; y++) {
-                    if (grid[x][y] != '.' && distance(i, j, x, y) <= TOWER_DISTANCE) {
-                        valid_distance = true;
+// Final check if the board is valid
+bool allCovered(const vector<vector<char>>& grid) {
+    for (int r = 0; r < GRID_SIZE; r++) {
+        for (int c = 0; c < GRID_SIZE; c++) {
+            bool covered = false;
+
+            for (int i = 0; i < GRID_SIZE && !covered; i++) {
+                for (int j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j] != '.' &&
+                        distance(r, c, i, j) <= TOWER_DISTANCE)
+                    {
+                        covered = true;
                         break;
                     }
                 }
-                if (valid_distance) break;
             }
-            
-            if (!valid_distance) return false;
+
+            if (!covered) return false;
         }
     }
     return true;
 }
 
-bool checkFreqRule(vector<vector<char> > &grid) {
+bool isCovered(const vector<vector<char>>& grid, int r, int c) {
     for (int i = 0; i < GRID_SIZE; i++) {
         for (int j = 0; j < GRID_SIZE; j++) {
-            if (grid[i][j] == '.') continue;
-            for (int x = 0; x < GRID_SIZE; x++) {
-                for (int y = 0; y < GRID_SIZE; y++) {
-                    if (i==x && j==y) continue;
-                    if (distance(i, j, x, y) < FREQ_DISTANCE && grid[i][j] == grid[x][y]) {
-                        return false;
-                    }
-                }    
-            }
+            if (grid[i][j] != '.' && distance(r, c, i, j) <= TOWER_DISTANCE) return true;
         }
     }
-    return true;
+    return false;
 }
+
 
 // Solver recursive function.
 bool cellSolver(vector<vector<char> > &grid, int row, int col, int numFreq) {
     // Base case
-    if (row >= GRID_SIZE) return checkDistanceRule(grid);
+    //cout << "Row: " << row << " " << "Col: " << col << endl;
     
-    // Go to the next row
-    if (col >= GRID_SIZE) return cellSolver(grid, row+1, 0, numFreq);
+    if (row == GRID_SIZE) return allCovered(grid);
+    if (col == GRID_SIZE) return cellSolver(grid, row+1, 0, numFreq);
     
-    // Option 1: place a tower with each available frequency
-    vector<char> available_freqs(FREQ.begin(), FREQ.begin()+numFreq);
-    for (char freq : available_freqs) {
-        grid[row][col] = freq;
-        // Prune
-        if (!checkFreqRule(grid)) {
-            grid[row][col] = '.';
-            continue;
+    bool needs_tower = towerNeeded(grid, row, col);
+    
+    //if (col == GRID_SIZE) return cellSolver(grid, row + 1, 0, numFreq);
+    //if (row == GRID_SIZE) return true;
+    
+    //if (towerNeeded(grid, row, col)) {
+        
+        vector<char> available_freqs(FREQ.begin(), FREQ.begin()+numFreq);
+        
+        for (char freq : available_freqs) {
+            bool valid_freq = true;
+            for (int i = 0; i < GRID_SIZE; i++) {
+                for (int j = 0; j < GRID_SIZE; j++) {
+                    if (i == row && j == col) continue;
+
+                    if (distance(row, col, i, j) < FREQ_DISTANCE && grid[i][j] == freq) {
+                        valid_freq = false;
+                        break;
+                    }
+                }
+                if (!valid_freq) break;
+            }
+            if (valid_freq) {
+                if (needs_tower) {
+                    grid[row][col] = freq;
+                    if (cellSolver(grid, row, col+1, numFreq)) return true;
+                    grid[row][col] = '.';
+                }
+            }
         }
-        if (cellSolver(grid, row, col + 1, numFreq)) return true;
+    //}
+    
+    if (!needs_tower) {
+        if (cellSolver(grid, row, col+1, numFreq)) return true;
     }
     
-    // Option 2: leave cell empty
-    grid[row][col] = '.';
-    if (cellSolver(grid, row, col+1, numFreq)) return true;
+    //if (isCovered(grid, row, col)) {
+    //    if (cellSolver(grid, row, col + 1, numFreq)) return true;
+    //}
 
     return false;
 }
@@ -151,7 +136,7 @@ bool cellProblem(vector<vector<char> > &grid, int numFreq) {
 }
 
 int main() {
-   // Create the empty grid of size GRID_SIZE. 
+    // Create the empty grid of size GRID_SIZE. 
     // Place a '.' in each square
     vector<vector<char> > grid(GRID_SIZE, vector<char>(GRID_SIZE, '.'));
     
