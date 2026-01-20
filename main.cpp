@@ -63,6 +63,7 @@ bool freqAllowed(vector<vector<char> > grid, int testRow, int testCol, char freq
 }
 
 bool canPlaceAnyFreq(vector<vector<char> > grid, int testRow, int testCol, int numFreq) {
+    // Check if at least one frequency can be placed at this position.
     for (int i = 0; i < numFreq; i++) {
         if (freqAllowed(grid, testRow, testCol, FREQ[i])) {
             return true;
@@ -91,6 +92,7 @@ void buildCoverPositions() {
 
 bool canBeCoveredLater(vector<vector<char> > grid, int targetRow, int targetCol,
                        int startIndex, int numFreq) {
+    // See if any unassigned future position could cover this cell.
     for (size_t i = 0; i < g_coverPositions[targetRow][targetCol].size(); i++) {
         int row = g_coverPositions[targetRow][targetCol][i].x;
         int col = g_coverPositions[targetRow][targetCol][i].y;
@@ -104,6 +106,7 @@ bool canBeCoveredLater(vector<vector<char> > grid, int targetRow, int targetCol,
 }
 
 bool allCovered(vector<vector<char> > grid) {
+    // Validate final grid coverage for all cells.
     for (int row = 0; row < GRID_SIZE; row++) {
         for (int col = 0; col < GRID_SIZE; col++) {
             if (towerNeeded(grid, row, col)) return false;
