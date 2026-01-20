@@ -14,6 +14,7 @@ const double TOWER_DISTANCE = 2.1;
 //  The FREQ vector  may have more frequencies than needed
 const vector<char> FREQ {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'};
 
+// Precomputed list of tower positions that cover each cell.
 static vector<vector<vector<cellTower> > > g_coverPositions;
 
 // Helper function to print grid
@@ -72,6 +73,7 @@ bool canPlaceAnyFreq(vector<vector<char> > grid, int testRow, int testCol, int n
 
 void buildCoverPositions() {
     if (!g_coverPositions.empty()) return;
+    // Precompute coverage neighborhoods to speed up forward checks.
     g_coverPositions.assign(GRID_SIZE,
                             vector<vector<cellTower> >(GRID_SIZE, vector<cellTower>()));
     for (int targetRow = 0; targetRow < GRID_SIZE; targetRow++) {
@@ -111,6 +113,7 @@ bool allCovered(vector<vector<char> > grid) {
 }
 
 bool forwardCheckCoverage(vector<vector<char> > grid, int startIndex, int numFreq) {
+    // Prune if any uncovered cell cannot be covered by a future placement.
     for (int row = 0; row < GRID_SIZE; row++) {
         for (int col = 0; col < GRID_SIZE; col++) {
             if (!towerNeeded(grid, row, col)) continue;
