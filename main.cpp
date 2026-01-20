@@ -13,10 +13,11 @@ const double FREQ_DISTANCE = 5.6;
 const double TOWER_DISTANCE = 2.1;
 //  The FREQ vector  may have more frequencies than needed
 const vector<char> FREQ {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'};
+
 static vector<vector<vector<cellTower> > > g_coverPositions;
 
 // Helper function to print grid
-void printGrid(const vector<vector<char> > &grid) {
+void printGrid(vector<vector<char> > grid) {
     for (int row = 0; row < GRID_SIZE; row ++) {
         for (int col = 0; col < GRID_SIZE; col ++) {
             cout << grid[row][col] << ' ';
@@ -34,7 +35,7 @@ double distance(int x1, int y1, int x2, int y2) {
 }
 // Helper function to determine if a tower is needed
 // Returns true if distance of point is less than TOWER_DISTANCE
-bool towerNeeded(const vector<vector<char> > &grid, int testRow, int testCol) {
+bool towerNeeded(vector<vector<char> > grid, int testRow, int testCol) {
     for (int row = 0; row < GRID_SIZE; row++) {
         for (int col = 0; col < GRID_SIZE; col++) {
             if (grid[row][col] != '.' &&
@@ -47,7 +48,7 @@ bool towerNeeded(const vector<vector<char> > &grid, int testRow, int testCol) {
 }
 
 // Helper function to determine if a frequency can be placed at a position
-bool freqAllowed(const vector<vector<char> > &grid, int testRow, int testCol, char freq) {
+bool freqAllowed(vector<vector<char> > grid, int testRow, int testCol, char freq) {
     for (int row = 0; row < GRID_SIZE; row++) {
         for (int col = 0; col < GRID_SIZE; col++) {
             if (row == testRow && col == testCol) continue;
@@ -60,69 +61,13 @@ bool freqAllowed(const vector<vector<char> > &grid, int testRow, int testCol, ch
     return true;
 }
 
-// Helper function to find the next valid frequency
-// Returns the next frequency to use
-char validFreq(const vector<vector<char> > &grid, int testRow, int testCol, int numFreq) {
-    int startIndex = 0;
-    if (grid[testRow][testCol] != '.') {
-        for (int i = 0; i < numFreq; i++) {
-            if (FREQ[i] == grid[testRow][testCol]) {
-                startIndex = i + 1;
-                break;
-            }
-        }
-    }
-
-    for (int i = startIndex; i < numFreq; i++) {
-        if (freqAllowed(grid, testRow, testCol, FREQ[i])) {
-            return FREQ[i];
-        }
-    }
-    return '.';
-}
-
-bool canPlaceAnyFreq(const vector<vector<char> > &grid, int testRow, int testCol, int numFreq) {
+bool canPlaceAnyFreq(vector<vector<char> > grid, int testRow, int testCol, int numFreq) {
     for (int i = 0; i < numFreq; i++) {
         if (freqAllowed(grid, testRow, testCol, FREQ[i])) {
             return true;
         }
     }
     return false;
-}
-
-bool canBeCoveredLater(const vector<vector<char> > &grid, int targetRow, int targetCol,
-                       int startIndex, int numFreq) {
-    for (size_t i = 0; i < g_coverPositions[targetRow][targetCol].size(); i++) {
-        int row = g_coverPositions[targetRow][targetCol][i].x;
-        int col = g_coverPositions[targetRow][targetCol][i].y;
-        int idx = row * GRID_SIZE + col;
-        if (idx < startIndex || grid[row][col] != '.') continue;
-        if (canPlaceAnyFreq(grid, row, col, numFreq)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool allCovered(const vector<vector<char> > &grid) {
-    for (int row = 0; row < GRID_SIZE; row++) {
-        for (int col = 0; col < GRID_SIZE; col++) {
-            if (towerNeeded(grid, row, col)) return false;
-        }
-    }
-    return true;
-}
-
-bool forwardCheckCoverage(const vector<vector<char> > &grid, int startIndex, int numFreq) {
-    for (int row = 0; row < GRID_SIZE; row++) {
-        for (int col = 0; col < GRID_SIZE; col++) {
-            if (!towerNeeded(grid, row, col)) continue;
-            if (!canBeCoveredLater(grid, row, col, startIndex, numFreq)) {
-                return false;
-            }
-        }
-    }
-    return true;
 }
 
 void buildCoverPositions() {
@@ -140,6 +85,62 @@ void buildCoverPositions() {
             }
         }
     }
+}
+
+bool canBeCoveredLater(vector<vector<char> > grid, int targetRow, int targetCol,
+                       int startIndex, int numFreq) {
+    for (size_t i = 0; i < g_coverPositions[targetRow][targetCol].size(); i++) {
+        int row = g_coverPositions[targetRow][targetCol][i].x;
+        int col = g_coverPositions[targetRow][targetCol][i].y;
+        int idx = row * GRID_SIZE + col;
+        if (idx < startIndex || grid[row][col] != '.') continue;
+        if (canPlaceAnyFreq(grid, row, col, numFreq)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool allCovered(vector<vector<char> > grid) {
+    for (int row = 0; row < GRID_SIZE; row++) {
+        for (int col = 0; col < GRID_SIZE; col++) {
+            if (towerNeeded(grid, row, col)) return false;
+        }
+    }
+    return true;
+}
+
+bool forwardCheckCoverage(vector<vector<char> > grid, int startIndex, int numFreq) {
+    for (int row = 0; row < GRID_SIZE; row++) {
+        for (int col = 0; col < GRID_SIZE; col++) {
+            if (!towerNeeded(grid, row, col)) continue;
+            if (!canBeCoveredLater(grid, row, col, startIndex, numFreq)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+// Helper function to find the next valid frequency
+// Returns the next frequency to use
+char validFreq(vector<vector<char> > grid, int testRow, int testCol, int numFreq) {
+    int startIndex = 0;
+    if (grid[testRow][testCol] != '.') {
+        for (int i = 0; i < numFreq; i++) {
+            if (FREQ[i] == grid[testRow][testCol]) {
+                startIndex = i + 1;
+                break;
+            }
+        }
+    }
+
+    for (int i = startIndex; i < numFreq; i++) {
+        if (freqAllowed(grid, testRow, testCol, FREQ[i])) {
+            return FREQ[i];
+        }
+    }
+    return '.';
 }
 
 // Solver recursive function.
@@ -206,5 +207,6 @@ int main() {
     } else {
         cout << "No Solution possible." << endl;
     }
+    
     return 0;
 }
