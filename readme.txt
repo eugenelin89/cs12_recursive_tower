@@ -22,3 +22,6 @@ b . . . . . . . d .
 . . . . . . e . . a 
 f . . h . . . . . . 
 
+Note: To Compile,
+g++ -std=c++11 main.cpp util.cpp -o tower
+
