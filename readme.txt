@@ -22,3 +22,17 @@ b . . . . . . . d .
 . . . . . . e . . a 
 f . . h . . . . . . 
 
+Solution Approach:
+The program uses backtracking to place towers on the 10x10 grid. Each cell is
+visited in row-major order, and the solver tries all valid frequencies at that
+cell or leaves it empty when it can still be covered by a tower placed later.
+Two constraints are enforced:
+1) Coverage: every grid cell must be within TOWER_DISTANCE of at least one tower.
+2) Frequency spacing: towers with the same letter must be at least FREQ_DISTANCE
+   apart.
+
+To reduce the search space, the solver precomputes which tower positions can
+cover each cell. During the search it performs forward checking: if any
+uncovered cell cannot be covered by any future placement, that branch is
+pruned. When all cells are assigned, the solver verifies full coverage before
+accepting a solution.
